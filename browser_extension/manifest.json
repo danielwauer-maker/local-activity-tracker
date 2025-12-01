@@ -1,0 +1,32 @@
+{
+  "manifest_version": 2,
+  "name": "Local Activity Tracker – Browser Collector",
+  "version": "0.1.0",
+  "description": "Sendet Browser-Aktivitäten an den lokalen Activity Tracker (127.0.0.1).",
+
+  "permissions": [
+    "tabs",
+    "activeTab",
+    "storage",
+    "http://127.0.0.1:8000/"
+  ],
+
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": false
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "local-activity-tracker@example.com"
+    }
+  }
+}

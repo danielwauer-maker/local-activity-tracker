@@ -10,6 +10,7 @@ from .db import SessionLocal, init_db
 from .models import Event as EventModel, Setting as SettingModel
 from pathlib import Path
 from routes import export as export_routes
+from routes import browser_events
 
 app = FastAPI(title="Local Activity Tracker")
 BASE_DIR = Path(__file__).resolve().parent
@@ -18,6 +19,7 @@ INDEX_PATH = BASE_DIR / "templates" / "index.html"
 DEFAULT_RETENTION_DAYS = 7
 
 app.include_router(export_routes.router)
+app.include_router(browser_events.router)
 
 
 # =========================
