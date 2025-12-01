@@ -1,0 +1,29 @@
+cd C:\dev\localtracker
+.\venv\Scripts\activate
+uvicorn backend.main:app --reload
+
+hier wird etwas aufgezeichnet
+
+
+Projekt: Local Activity Tracker (Python, FastAPI, Windows)
+
+Kurzüberblick:
+- Backend: FastAPI, SQLite (events, settings)
+- Modelle: Event, Setting
+- Collectors:
+  - screenshot_collector.py: WebP, Scale-Faktor, Delta-Vergleich, Cleanup nach X Tagen (via /settings.screenshot_retention_days)
+  - window_collector.py: window_focus-Events (app, title, pid)
+  - input_collector.py: Maus/Tastatur-Events + aktives Fenster
+  - document_collector.py: File-Änderungen in bestimmten Ordnern (docx, xlsx, txt, Code etc.)
+- Dashboard:
+  - Läuft auf /
+  - Lädt Daten von:
+    - /analysis/top-windows
+    - /analysis/timeline (mit source=…)
+    - /analysis/routines
+    - /analysis/automation-candidates
+    - /settings (GET/POST)
+  - Enthält Dark/Light-Theme mit Toggle-Button
+
+Bitte in diesem Chat so tun, als würden wir genau an diesem Projekt weiterarbeiten.
+

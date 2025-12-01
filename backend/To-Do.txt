@@ -1,0 +1,5 @@
+Local Activity Tracker
+
+- Browser Funktion hinzufügen
+- Export fertigstellen
+- Timeline nach Tag Datum
