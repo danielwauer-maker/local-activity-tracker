@@ -1,0 +1,21 @@
+=== Projekt-Check gestartet: 2025-12-01_20-05-24 ===
+
+== Syntax-Check via compileall ==
+✔ Alle .py-Dateien sind syntaktisch OK.
+
+== Import-Check für alle .py-Dateien ==
+✔ import debug_imports
+✔ import start_all
+✘ Fehler beim Import von backend.analysis_local: No module named 'sqlalchemy'
+✘ Fehler beim Import von backend.db: No module named 'sqlalchemy'
+✘ Fehler beim Import von backend.main: No module named 'fastapi'
+✘ Fehler beim Import von backend.models: No module named 'sqlalchemy'
+✔ import backend.__init__
+✘ Fehler beim Import von collectors.document_collector: No module named 'watchdog'
+✘ Fehler beim Import von collectors.input_collector: No module named 'win32gui'
+✘ Fehler beim Import von collectors.screenshot_collector: No module named 'mss'
+✘ Fehler beim Import von collectors.window_collector: No module named 'win32gui'
+✔ import collectors.__init__
+✘ Fehler beim Import von routes.deps: No module named 'sqlalchemy'
+✘ Fehler beim Import von routes.export: No module named 'fastapi'
+✔ import routes.__init__

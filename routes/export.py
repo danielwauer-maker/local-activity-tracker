@@ -10,8 +10,8 @@ from fastapi import APIRouter, Depends, Query, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
-from .deps import get_db       # <- anpassen, falls dein Pfad anders ist
-from .models import Event      # <- anpassen, falls dein Pfad anders ist
+from routes.deps import get_db       # <- anpassen, falls dein Pfad anders ist
+from backend.models import Event      # <- anpassen, falls dein Pfad anders ist
 
 router = APIRouter(
     prefix="/export",
