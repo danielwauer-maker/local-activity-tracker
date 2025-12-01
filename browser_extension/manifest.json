@@ -1,19 +1,21 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 3,
   "name": "Local Activity Tracker – Browser Collector",
   "version": "0.1.0",
   "description": "Sendet Browser-Aktivitäten an den lokalen Activity Tracker (127.0.0.1).",
 
   "permissions": [
     "tabs",
-    "activeTab",
-    "storage",
+    "storage"
+  ],
+
+  "host_permissions": [
     "http://127.0.0.1:8000/"
   ],
 
   "background": {
-    "scripts": ["background.js"],
-    "persistent": false
+    "service_worker": "background.js",
+    "type": "module"
   },
 
   "content_scripts": [
@@ -23,6 +25,10 @@
       "run_at": "document_idle"
     }
   ],
+
+  "action": {
+    "default_title": "Local Activity Tracker – Browser Collector"
+  },
 
   "browser_specific_settings": {
     "gecko": {

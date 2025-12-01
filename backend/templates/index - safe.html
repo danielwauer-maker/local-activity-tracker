@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="dark">
+<head>
+    <meta charset="utf-8" />
+    <title>Local Activity Tracker</title>
+    <style>
+        :root {
+            --bg-body: #0f172a;
+            --bg-header: linear-gradient(120deg, #020617 0%, #0f172a 40%, #0b1120 100%);
+            --bg-card: #0b1120;
+            --bg-card-inner: #020617;
+            --bg-card-soft: #020617;
+            --border-subtle: #1e293b;
+            --accent: #38bdf8;
+            --accent-soft: rgba(56, 189, 248, 0.12);
+            --accent-strong: #0ea5e9;
+            --text-main: #e5e7eb;
+            --text-muted: #9ca3af;
+            --text-soft: #6b7280;
+            --danger: #f97373;
+            --radius-xl: 18px;
+            --radius-lg: 12px;
+            --shadow-soft: 0 18px 40px rgba(15, 23, 42, 0.7);
+        }
+
+        /* Light Theme Overrides */
+        html[data-theme="light"] {
+            color-scheme: light;
+            --bg-body: #f3f4f6;
+            --bg-header: linear-gradient(120deg, #eef2ff 0%, #e5e7eb 40%, #e5f3ff 100%);
+            --bg-card: #ffffff;
+            --bg-card-inner: #ffffff;
+            --bg-card-soft: #f9fafb;
+            --border-subtle: #e5e7eb;
+            --accent: #0284c7;
+            --accent-soft: rgba(2, 132, 199, 0.12);
+            --accent-strong: #0369a1;
+            --text-main: #0f172a;
+            --text-muted: #4b5563;
+            --text-soft: #9ca3af;
+            --shadow-soft: 0 18px 40px rgba(15, 23, 42, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: radial-gradient(circle at top left, #1e293b 0, #020617 40%, #000 100%);
+            color: var(--text-main);
+        }
+
+        html[data-theme="light"] body {
+            background: radial-gradient(circle at top left, #e5e7eb 0, #f3f4f6 40%, #e5e7eb 100%);
+        }
+
+        .app-shell {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .app-header {
+            padding: 20px 28px 12px 28px;
+            background: var(--bg-header);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+            box-shadow: 0 14px 40px rgba(15, 23, 42, 0.85);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        html[data-theme="light"] .app-header {
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+            border-bottom-color: rgba(148, 163, 184, 0.35);
+        }
+
+        .app-header-main {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .app-title {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .app-title h1 {
+            font-size: 22px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .app-title h1 span.logo-dot {
+            display: inline-flex;
+            width: 12px;
+            height: 12px;
+            border-radius: 999px;
+            background: radial-gradient(circle at 30% 30%, #e5f9ff 0, #38bdf8 35%, #0ea5e9 100%);
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.35);
+        }
+
+        html[data-theme="light"] .app-title h1 span.logo-dot {
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.3);
+        }
+
+        .app-title small {
+            margin: 0;
+            color: var(--text-soft);
+            font-size: 12px;
+        }
+
+        .header-status {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 12px;
+        }
+
+        /* Header-Erfassung-Status */
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: rgba(15, 118, 110, 0.16);
+            color: #6ee7b7;
+            font-weight: 500;
+        }
+
+        html[data-theme="light"] .status-pill {
+            background: rgba(34, 197, 94, 0.08);
+            color: #059669;
+        }
+
+        .status-pill-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            background: #22c55e;
+            box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.18);
+        }
+
+        #status {
+            color: var(--text-muted);
+        }
+
+        .theme-toggle-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            border-radius: 999px;
+            border: 1px solid rgba(148, 163, 184, 0.45);
+            background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.8) 0, rgba(15, 23, 42, 0.95) 40%, rgba(15, 23, 42, 1) 100%);
+            color: #e5e7eb;
+            cursor: pointer;
+        }
+
+        html[data-theme="light"] .theme-toggle-btn {
+            background: radial-gradient(circle at top left, #f9fafb 0, #e5e7eb 50%, #e5e7eb 100%);
+            color: #111827;
+        }
+
+        .theme-toggle-btn:hover {
+            border-color: rgba(248, 250, 252, 0.8);
+        }
+
+        .theme-toggle-icon {
+            font-size: 15px;
+        }
+
+        .app-main {
+            padding: 18px 24px 24px 24px;
+        }
+
+        .grid-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.6fr);
+            gap: 18px;
+            align-items: flex-start;
+        }
+
+        @media (max-width: 1100px) {
+            .grid-layout {
+                grid-template-columns: minmax(0, 1fr);
+            }
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-soft);
+            padding: 14px 16px 14px 16px;
+        }
+
+        .card-inner {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .card-header h2 {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+
+        .card-header small {
+            display: block;
+            margin-top: 2px;
+            font-size: 11px;
+            color: var(--text-soft);
+        }
+
+        .card-tag {
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(148, 163, 184, 0.4);
+            color: var(--text-muted);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        html[data-theme="light"] .card-tag {
+            background: rgba(249, 250, 251, 0.9);
+            border-color: rgba(156, 163, 175, 0.7);
+        }
+
+        .card-tag span {
+            font-weight: 500;
+            color: var(--accent);
+        }
+
+        .table-container {
+            margin-top: 4px;
+        }
+
+        .table-scroll {
+            max-height: 260px;
+            overflow-y: auto;
+            border-radius: var(--radius-lg);
+            border: 1px solid rgba(30, 64, 175, 0.28);
+            background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.92) 0, rgba(15, 23, 42, 0.98) 40%, #020617 100%);
+        }
+
+        html[data-theme="light"] .table-scroll {
+            background: #ffffff;
+            border-color: rgba(209, 213, 219, 0.9);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        thead tr {
+            background: rgba(15, 23, 42, 0.9);
+        }
+
+        html[data-theme="light"] thead tr {
+            background: rgba(243, 244, 246, 0.9);
+        }
+
+        th, td {
+            padding: 6px 10px;
+            text-align: left;
+        }
+
+        th {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-soft);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.3);
+            position: sticky;
+            top: 0;
+            backdrop-filter: blur(6px);
+        }
+
+        html[data-theme="light"] th {
+            border-bottom-color: rgba(209, 213, 219, 0.9);
+        }
+
+        td {
+            border-bottom: 1px solid rgba(30, 41, 59, 0.75);
+        }
+
+        html[data-theme="light"] td {
+            border-bottom-color: rgba(229, 231, 235, 0.9);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .muted {
+            color: var(--text-muted);
+            font-size: 11px;
+        }
+
+        .timestamp {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 11px;
+        }
+
+        .source-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            border: 1px solid rgba(148, 163, 184, 0.5);
+            text-transform: lowercase;
+        }
+
+        .source-pill[data-source="window"] {
+            border-color: rgba(59, 130, 246, 0.7);
+            color: #93c5fd;
+        }
+
+        .source-pill[data-source="input"] {
+            border-color: rgba(249, 115, 22, 0.7);
+            color: #fdba74;
+        }
+
+        .source-pill[data-source="document"] {
+            border-color: rgba(132, 204, 22, 0.7);
+            color: #bef264;
+        }
+
+        .source-pill[data-source="browser"] {
+            border-color: rgba(56, 189, 248, 0.7);
+            color: #7dd3fc;
+        }
+
+        .details-cell {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .settings-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+
+        .settings-row label {
+            flex: 0 0 210px;
+            color: var(--text-muted);
+        }
+
+        .settings-row input[type="number"],
+        .settings-row input[type="date"],
+        .settings-row select {
+            flex: 1;
+            padding: 5px 7px;
+            border-radius: 8px;
+            border: 1px solid rgba(148, 163, 184, 0.6);
+            background: var(--bg-card-inner);
+            color: var(--text-main);
+            font-size: 12px;
+        }
+
+        html[data-theme="light"] .settings-row input[type="number"],
+        html[data-theme="light"] .settings-row input[type="date"],
+        html[data-theme="light"] .settings-row select {
+            background: #f9fafb;
+            border-color: rgba(209, 213, 219, 0.9);
+        }
+
+        .settings-row button {
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(56, 189, 248, 0.5);
+            background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.15) 0, rgba(56, 189, 248, 0.05) 50%, transparent 100%);
+            color: var(--accent-strong);
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .settings-row button:hover {
+            border-color: rgba(56, 189, 248, 0.9);
+        }
+
+        #settings-status {
+            font-size: 11px;
+            color: var(--text-soft);
+            margin-top: 6px;
+        }
+
+        .settings-divider {
+            margin: 14px 0 8px 0;
+            border-top: 1px solid rgba(148, 163, 184, 0.25);
+        }
+
+        .date-range {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .date-range-separator {
+            font-size: 12px;
+            color: var(--text-soft);
+        }
+
+        #export-status {
+            font-size: 11px;
+            color: var(--text-soft);
+            margin-top: 4px;
+        }
+
+        /* Spaltengrößen für bessere Lesbarkeit */
+        #timeline-table th:nth-child(1),
+        #timeline-table td:nth-child(1),
+        #input-table th:nth-child(1),
+        #input-table td:nth-child(1),
+        #document-table th:nth-child(1),
+        #document-table td:nth-child(1) {
+            width: 160px;
+        }
+
+        #timeline-table th:nth-child(2),
+        #timeline-table td:nth-child(2) {
+            width: 90px;
+        }
+
+        #timeline-table th:nth-child(3),
+        #timeline-table td:nth-child(3),
+        #input-table th:nth-child(2),
+        #input-table td:nth-child(2),
+        #document-table th:nth-child(2),
+        #document-table td:nth-child(2) {
+            width: 120px;
+        }
+
+        /* Browser Collector Timeline */
+        .timeline-list {
+            margin-top: 0.5rem;
+            border-radius: 0.75rem;
+            background: var(--bg-card-inner);
+            border: 1px solid var(--border-subtle);
+            padding: 0.5rem 0.75rem;
+        }
+
+        .browser-timeline {
+            max-height: 260px;
+            overflow-y: auto;
+        }
+
+        .timeline-item {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            column-gap: 0.75rem;
+            row-gap: 0.1rem;
+            padding: 0.35rem 0;
+            font-size: 0.8rem;
+        }
+
+        .timeline-item + .timeline-item {
+            border-top: 1px solid rgba(148, 163, 184, 0.25);
+        }
+
+        .timeline-item-time {
+            font-variant-numeric: tabular-nums;
+            color: var(--text-soft);
+        }
+
+        .timeline-item-main {
+            color: var(--text-main);
+        }
+
+        .timeline-item-url {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            word-break: break-all;
+        }
+
+        .timeline-item-tag {
+            font-size: 0.7rem;
+            padding: 0.05rem 0.4rem;
+            border-radius: 999px;
+            border: 1px solid var(--border-subtle);
+            margin-right: 0.3rem;
+        }
+
+        /* Browser Collector Status-Pill (separat, damit Header-Pill unangetastet bleibt) */
+        .collector-status-pill {
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            border: 1px solid transparent;
+        }
+
+        .status-ok {
+            background: rgba(34, 197, 94, 0.12);
+            border-color: rgba(34, 197, 94, 0.6);
+            color: #4ade80;
+        }
+
+        .status-warn {
+            background: rgba(234, 179, 8, 0.12);
+            border-color: rgba(234, 179, 8, 0.6);
+            color: #facc15;
+        }
+
+        .status-offline {
+            background: rgba(239, 68, 68, 0.12);
+            border-color: rgba(239, 68, 68, 0.6);
+            color: #f97373;
+        }
+
+        .status-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-soft);
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .timeline-count {
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+<div class="app-shell">
+    <header class="app-header">
+        <div class="app-header-main">
+            <div class="app-title">
+                <h1>
+                    <span class="logo-dot"></span>
+                    Local Activity Tracker
+                </h1>
+                <small id="status">Lade Daten…</small>
+            </div>
+            <div class="header-status">
+                <div class="status-pill">
+                    <span class="status-pill-dot"></span>
+                    <span>Erfassung aktiv</span>
+                </div>
+                <button id="theme-toggle" class="theme-toggle-btn" title="Theme umschalten">
+                    <span class="theme-toggle-icon">🌙</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="app-main">
+        <div class="grid-layout">
+            <!-- Linke Spalte: Top Windows & Timeline & Routinen -->
+            <section class="card">
+                <div class="card-inner">
+                    <!-- Top Windows -->
+                    <div class="card-header">
+                        <div>
+                            <h2>Top Fenster / Anwendungen</h2>
+                            <small>Basierend auf window_focus-Events</small>
+                        </div>
+                        <div class="card-tag">
+                            Letzte <span>Sessions</span>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <div class="table-scroll">
+                            <table id="top-windows-table">
+                                <thead>
+                                <tr>
+                                    <th>App</th>
+                                    <th>Titel</th>
+                                    <th>Minuten</th>
+                                    <th>Stunden</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr><td colspan="4" class="muted">Noch keine Daten…</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Timeline -->
+                    <div class="card-header" style="margin-top: 16px;">
+                        <div>
+                            <h2>Timeline</h2>
+                            <small>Neueste Events zuerst · Limit 200</small>
+                        </div>
+                        <div class="card-tag">
+                            Quelle: <span>Alle</span>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <div class="table-scroll">
+                            <table id="timeline-table">
+                                <thead>
+                                <tr>
+                                    <th>Zeit</th>
+                                    <th>Quelle</th>
+                                    <th>Typ</th>
+                                    <th>Details</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr><td colspan="4" class="muted">Noch keine Daten…</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Routinen & Automatisierung -->
+                    <div class="card-header" style="margin-top: 16px;">
+                        <div>
+                            <h2>Wiederkehrende Routinen</h2>
+                            <small>Erkannte Nutzungsmuster</small>
+                        </div>
+                        <div class="card-tag">
+                            Analyse <span>Task-Mining</span>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <div class="table-scroll">
+                            <table id="routines-table">
+                                <thead>
+                                <tr>
+                                    <th>Sequenz</th>
+                                    <th>Vorkommen</th>
+                                    <th>Stunden</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr><td colspan="3" class="muted">Noch keine Routinen gefunden.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="card-header" style="margin-top: 16px;">
+                        <div>
+                            <h2>Automatisierungskandidaten</h2>
+                            <small>Potenzielle Zeit- & Kostenersparnis</small>
+                        </div>
+                        <div class="card-tag">
+                            Fokus <span>Top-Zeitfresser</span>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <div class="table-scroll">
+                            <table id="automation-table">
+                                <thead>
+                                <tr>
+                                    <th>App</th>
+                                    <th>Titel</th>
+                                    <th>Ø Min/Tag</th>
+                                    <th>Stunden/Jahr</th>
+                                    <th>Pot. Ersparnis/Jahr</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr><td colspan="5" class="muted">Noch keine Kandidaten gefunden.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Rechte Spalte: Browser Collector + Input + Dokumente + Einstellungen -->
+            <section class="card">
+                <div class="card-inner">
+                    <!-- Browser Collector -->
+                    <div class="card-header">
+                        <div>
+                            <h2 class="card-title">Browser Collector</h2>
+                            <small class="card-subtitle">Status & letzte Aktivitäten</small>
+                        </div>
+                        <div id="browser-status-pill" class="collector-status-pill status-offline">
+                            Offline
+                        </div>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="status-meta">
+                            <span>Letztes Event: <span id="browser-last-event">–</span></span>
+                            <span>Seitdem: <span id="browser-last-diff">–</span></span>
+                        </div>
+
+                        <div class="timeline-header">
+                            <span>Letzte Browser-Ereignisse</span>
+                            <span id="browser-event-count" class="timeline-count">0 Einträge</span>
+                        </div>
+
+                        <div id="browser-timeline" class="timeline-list browser-timeline"></div>
+                    </div>
+
+                    <!-- Input-Aktivitäten -->
+                    <div class="card-header" style="margin-top: 20px;">
+                        <div>
+                            <h2>Input-Aktivitäten</h2>
+                            <small>Tastatur- & Maus-Ereignisse</small>
+                        </div>
+                        <div class="card-tag">
+                            Quelle: <span>input</span>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <div class="table-scroll">
+                            <table id="input-table">
+                                <thead>
+                                <tr>
+                                    <th>Zeit</th>
+                                    <th>Typ</th>
+                                    <th>App/Titel</th>
+                                    <th>Details</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr><td colspan="4" class="muted">Keine Input-Daten gefunden.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Dokument-Aktivitäten -->
+                    <div class="card-header" style="margin-top: 20px;">
+                        <div>
+                            <h2>Dokumenten-Aktivitäten</h2>
+                            <small>Dateiänderungen & -zugriffe</small>
+                        </div>
+                        <div class="card-tag">
+                            Quelle: <span>document</span>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <div class="table-scroll">
+                            <table id="document-table">
+                                <thead>
+                                <tr>
+                                    <th>Zeit</th>
+                                    <th>Typ</th>
+                                    <th>Pfad</th>
+                                    <th>Details</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr><td colspan="4" class="muted">Keine Dokument-Events gefunden.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Einstellungen -->
+                    <div class="card-header" style="margin-top: 20px;">
+                        <div>
+                            <h2>Einstellungen</h2>
+                            <small>Aufbewahrung & Export</small>
+                        </div>
+                        <div class="card-tag">
+                            Screenshots <span>WebP</span>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="settings-row">
+                            <label for="retention-input">Screenshots behalten für (Tage):</label>
+                            <input id="retention-input" type="number" min="1" max="365" value="7" />
+                            <button id="save-settings-btn">Speichern</button>
+                        </div>
+                        <div id="settings-status"></div>
+
+                        <div class="settings-divider"></div>
+
+                        <div class="settings-row">
+                            <label>Export Zeitraum:</label>
+                            <div class="date-range">
+                                <input id="date-from" type="date" />
+                                <span class="date-range-separator">bis</span>
+                                <input id="date-to" type="date" />
+                            </div>
+                        </div>
+                        <div class="settings-row">
+                            <label for="source-filter">Quelle:</label>
+                            <select id="source-filter">
+                                <option value="">Alle</option>
+                                <option value="window">window</option>
+                                <option value="input">input</option>
+                                <option value="document">document</option>
+                                <option value="browser">browser</option>
+                            </select>
+                            <button id="export-button">Export starten</button>
+                        </div>
+                        <div id="export-status"></div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+</div>
+
+<script>
+    // Theme-Handling
+    function applyTheme(theme) {
+        const html = document.documentElement;
+        const btnIcon = document.querySelector(".theme-toggle-icon");
+        html.setAttribute("data-theme", theme);
+        localStorage.setItem("lat-theme", theme);
+        if (btnIcon) {
+            btnIcon.textContent = theme === "light" ? "☀" : "🌙";
+        }
+    }
+
+    function initTheme() {
+        const saved = localStorage.getItem("lat-theme");
+        const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+        let theme = "dark";
+
+        if (saved === "dark" || saved === "light") {
+            theme = saved;
+        } else {
+            theme = prefersDark ? "dark" : "light";
+        }
+        applyTheme(theme);
+    }
+
+    async function fetchJSON(url) {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return res.json();
+    }
+
+    function formatTimestamp(ts) {
+        try {
+            const d = new Date(ts);
+            return d.toLocaleString();
+        } catch {
+            return ts;
+        }
+    }
+
+    function shortPayload(payload) {
+        if (!payload) return "";
+        if (payload.app || payload.title) {
+            return [payload.app, payload.title].filter(Boolean).join(" – ");
+        }
+        if (payload.path) {
+            return payload.path;
+        }
+        if (payload.key) {
+            return "Key: " + payload.key;
+        }
+        if (payload.button) {
+            return "Mouse " + payload.button + " @ (" + payload.x + "," + payload.y + ")";
+        }
+        return JSON.stringify(payload).slice(0, 80) + ".";
+    }
+
+    function renderTopWindows(data) {
+        const tbody = document.querySelector("#top-windows-table tbody");
+        tbody.innerHTML = "";
+
+        if (!data || data.length === 0) {
+            const tr = document.createElement("tr");
+            tr.innerHTML = '<td colspan="4" class="muted">Keine Daten verfügbar.</td>';
+            tbody.appendChild(tr);
+            return;
+        }
+
+        data.forEach(row => {
+            const tr = document.createElement("tr");
+            const app = row.app || "(unbekannt)";
+            const title = row.title || "";
+            tr.innerHTML = `
+                <td>${app}</td>
+                <td>${title}</td>
+                <td>${row.total_minutes.toFixed(1)}</td>
+                <td>${row.total_hours.toFixed(2)}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function renderTimeline(data) {
+        const tbody = document.querySelector("#timeline-table tbody");
+        tbody.innerHTML = "";
+
+        if (!data || data.length === 0) {
+            const tr = document.createElement("tr");
+            tr.innerHTML = '<td colspan="4" class="muted">Keine Daten verfügbar.</td>';
+            tbody.appendChild(tr);
+            return;
+        }
+
+        data.forEach(ev => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td><span class="timestamp">${formatTimestamp(ev.timestamp)}</span></td>
+                <td><span class="source-pill" data-source="${ev.source}">${ev.source}</span></td>
+                <td>${ev.type}</td>
+                <td class="details-cell">${shortPayload(ev.payload)}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function renderRoutines(data) {
+        const tbody = document.querySelector("#routines-table tbody");
+        tbody.innerHTML = "";
+
+        if (!data || data.length === 0) {
+            const tr = document.createElement("tr");
+            tr.innerHTML = '<td colspan="3" class="muted">Noch keine Routinen gefunden.</td>';
+            tbody.appendChild(tr);
+            return;
+        }
+
+        data.forEach(r => {
+            const tr = document.createElement("tr");
+            const seqText = r.sequence
+                .map(s => (s.app || "??") + " – " + (s.title || ""))
+                .join("  →  ");
+            tr.innerHTML = `
+                <td>${seqText}</td>
+                <td>${r.count}</td>
+                <td>${r.total_hours.toFixed(2)}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function renderAutomation(data) {
+        const tbody = document.querySelector("#automation-table tbody");
+        tbody.innerHTML = "";
+
+        if (!data || data.length === 0) {
+            const tr = document.createElement("tr");
+            tr.innerHTML = '<td colspan="5" class="muted">Noch keine Kandidaten gefunden.</td>';
+            tbody.appendChild(tr);
+            return;
+        }
+
+        data.forEach(c => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>${c.app || "??"}</td>
+                <td>${c.title || ""}</td>
+                <td>${c.avg_minutes_per_day.toFixed(1)}</td>
+                <td>${c.yearly_hours.toFixed(1)}</td>
+                <td>${c.potential_savings_per_year.toFixed(0)}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function renderInput(data) {
+        const tbody = document.querySelector("#input-table tbody");
+        tbody.innerHTML = "";
+
+        if (!data || data.length === 0) {
+            const tr = document.createElement("tr");
+            tr.innerHTML = '<td colspan="4" class="muted">Keine Input-Daten gefunden.</td>';
+            tbody.appendChild(tr);
+            return;
+        }
+
+        data.forEach(ev => {
+            const p = ev.payload || {};
+            const appTitle = [p.app, p.title].filter(Boolean).join(" – ");
+            let detail = "";
+            if (p.key) {
+                detail = "Key: " + p.key;
+            } else if (p.button) {
+                detail = "Mouse " + p.button + " @ (" + p.x + "," + p.y + ")";
+            } else if (typeof p.x === "number" && typeof p.y === "number") {
+                detail = "Move @ (" + p.x + "," + p.y + ")";
+            } else {
+                detail = shortPayload(p);
+            }
+
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td><span class="timestamp">${formatTimestamp(ev.timestamp)}</span></td>
+                <td>${ev.type}</td>
+                <td>${appTitle}</td>
+                <td class="details-cell">${detail}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function renderDocuments(data) {
+        const tbody = document.querySelector("#document-table tbody");
+        tbody.innerHTML = "";
+
+        if (!data || data.length === 0) {
+            const tr = document.createElement("tr");
+            tr.innerHTML = '<td colspan="4" class="muted">Keine Dokument-Events gefunden.</td>';
+            tbody.appendChild(tr);
+            return;
+        }
+
+        data.forEach(ev => {
+            const p = ev.payload || {};
+            const path = p.path || "(kein Pfad)";
+            const detail = shortPayload(p);
+
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td><span class="timestamp">${formatTimestamp(ev.timestamp)}</span></td>
+                <td>${ev.type}</td>
+                <td>${path}</td>
+                <td class="details-cell">${detail}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // Einstellungen
+    async function loadSettings() {
+        const status = document.getElementById("settings-status");
+        try {
+            const data = await fetchJSON("/settings");
+            const retentionInput = document.getElementById("retention-input");
+            if (data && typeof data.screenshot_retention_days === "number" && retentionInput) {
+                retentionInput.value = data.screenshot_retention_days;
+            }
+            status.textContent = "";
+        } catch (e) {
+            console.error(e);
+            status.textContent = "Konnte Einstellungen nicht laden: " + e.message;
+        }
+    }
+
+    async function saveSettings() {
+        const status = document.getElementById("settings-status");
+        const retentionInput = document.getElementById("retention-input");
+        if (!retentionInput) return;
+
+        const days = parseInt(retentionInput.value, 10);
+        if (isNaN(days) || days <= 0) {
+            status.textContent = "Bitte eine gültige Anzahl Tage eingeben.";
+            return;
+        }
+
+        try {
+            status.textContent = "Speichere Einstellungen…";
+            const res = await fetch("/settings", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({screenshot_retention_days: days})
+            });
+            if (!res.ok) throw new Error("HTTP " + res.status);
+            status.textContent = "Einstellungen gespeichert.";
+            setTimeout(() => status.textContent = "", 3000);
+        } catch (e) {
+            console.error(e);
+            status.textContent = "Fehler beim Speichern: " + e.message;
+        }
+    }
+
+    function buildExportUrl() {
+        const fromEl = document.getElementById("date-from");
+        const toEl = document.getElementById("date-to");
+        const sourceEl = document.getElementById("source-filter");
+
+        const params = new URLSearchParams();
+        if (fromEl && fromEl.value) params.set("from", fromEl.value);
+        if (toEl && toEl.value) params.set("to", toEl.value);
+        if (sourceEl && sourceEl.value) params.set("source", sourceEl.value);
+
+        return "/export?" + params.toString();
+    }
+
+    function triggerExport() {
+        const status = document.getElementById("export-status");
+        try {
+            const url = buildExportUrl();
+            status.textContent = "Export wird vorbereitet…";
+            window.open(url, "_blank");
+            setTimeout(() => {
+                status.textContent = "";
+            }, 3000);
+        } catch (e) {
+            console.error(e);
+            status.textContent = "Fehler beim Starten des Exports: " + e.message;
+        }
+    }
+
+    async function loadData() {
+        const statusEl = document.getElementById("status");
+
+        loadSettings();
+
+        try {
+            statusEl.textContent = "Lade Top-Fenster…";
+            const top = await fetchJSON("/analysis/top-windows?limit=10");
+            renderTopWindows(top);
+
+            statusEl.textContent = "Lade Timeline…";
+            const timeline = await fetchJSON("/analysis/timeline?limit=200");
+            renderTimeline(timeline);
+
+            statusEl.textContent = "Lade Routinen…";
+            const routines = await fetchJSON("/analysis/routines?n=3&min_count=3&days=3&limit=10");
+            renderRoutines(routines);
+
+            statusEl.textContent = "Lade Automatisierungskandidaten…";
+            const automation = await fetchJSON("/analysis/automation-candidates?days=7&limit=10&hourly_rate=60&automation_factor=0.7");
+            renderAutomation(automation);
+
+            statusEl.textContent = "Lade Input-Aktivitäten…";
+            const inputData = await fetchJSON("/analysis/timeline?source=input&limit=200");
+            renderInput(inputData);
+
+            statusEl.textContent = "Lade Dokument-Aktivitäten…";
+            const docData = await fetchJSON("/analysis/timeline?source=document&limit=100");
+            renderDocuments(docData);
+
+            statusEl.textContent = "Letzte Aktualisierung: " + new Date().toLocaleTimeString();
+        } catch (e) {
+            console.error(e);
+            statusEl.textContent = "Fehler beim Laden der Daten: " + e.message;
+        }
+    }
+
+    // ------- Browser Collector spezifische Funktionen -------
+
+    function formatTime(dateStr) {
+        const d = new Date(dateStr);
+        return d.toLocaleTimeString("de-DE", {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+        });
+    }
+
+    function formatRelativeSeconds(seconds) {
+        if (seconds == null) return "–";
+        if (seconds < 60) return `${Math.round(seconds)} s`;
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.round(seconds % 60);
+        return `${mins} min ${secs} s`;
+    }
+
+    function updateBrowserStatusUI(statusData) {
+        const pill = document.getElementById("browser-status-pill");
+        const lastEventEl = document.getElementById("browser-last-event");
+        const lastDiffEl = document.getElementById("browser-last-diff");
+
+        if (!pill || !lastEventEl || !lastDiffEl) return;
+
+        pill.classList.remove("status-ok", "status-warn", "status-offline");
+        pill.classList.add(`status-${statusData.status}`);
+        pill.textContent =
+            statusData.status === "ok"
+                ? "OK"
+                : statusData.status === "warn"
+                    ? "Verzögert"
+                    : "Offline";
+
+        lastEventEl.textContent = statusData.last_event
+            ? new Date(statusData.last_event).toLocaleString("de-DE")
+            : "–";
+
+        lastDiffEl.textContent = formatRelativeSeconds(
+            statusData.seconds_since_last_event
+        );
+    }
+
+    function renderBrowserCollectorTimeline(events) {
+        const container = document.getElementById("browser-timeline");
+        const countEl = document.getElementById("browser-event-count");
+        if (!container || !countEl) return;
+
+        container.innerHTML = "";
+        countEl.textContent = `${events.length} Einträge`;
+
+        if (!events || events.length === 0) {
+            container.innerHTML = '<div class="muted" style="padding:8px 10px;">Noch keine Browser-Aktivitäten erfasst.</div>';
+            return;
+        }
+
+        for (const ev of events) {
+            const time = formatTime(ev.timestamp);
+            const type = ev.type || "event";
+            const url = ev.payload?.url || "";
+            const title = ev.payload?.title || "";
+            const dom = ev.payload?.dom_event || null;
+
+            const item = document.createElement("div");
+            item.className = "timeline-item";
+
+            const timeEl = document.createElement("div");
+            timeEl.className = "timeline-item-time";
+            timeEl.textContent = time;
+
+            const mainEl = document.createElement("div");
+            mainEl.className = "timeline-item-main";
+
+            const firstLine = document.createElement("div");
+
+            const tag = document.createElement("span");
+            tag.className = "timeline-item-tag";
+            tag.textContent = type;
+
+            const titleSpan = document.createElement("span");
+            titleSpan.textContent = title || "(kein Titel)";
+
+            firstLine.appendChild(tag);
+            firstLine.appendChild(titleSpan);
+
+            const urlLine = document.createElement("div");
+            urlLine.className = "timeline-item-url";
+            urlLine.textContent = url;
+
+            if (dom && dom.event_type) {
+                const domLine = document.createElement("div");
+                domLine.className = "timeline-item-url";
+                domLine.textContent = `DOM: ${dom.event_type} – ${dom.element_tag || ""}#${dom.element_id || ""}`;
+                mainEl.appendChild(domLine);
+            }
+
+            mainEl.appendChild(firstLine);
+            mainEl.appendChild(urlLine);
+
+            item.appendChild(timeEl);
+            item.appendChild(mainEl);
+            container.appendChild(item);
+        }
+    }
+
+    async function refreshBrowserCollector() {
+        try {
+            const [status, events] = await Promise.all([
+                fetchJSON("/collectors/browser/status"),
+                fetchJSON("/events/browser/recent?limit=50"),
+            ]);
+            updateBrowserStatusUI(status);
+            renderBrowserCollectorTimeline(events);
+        } catch (e) {
+            console.warn("Browser Collector UI Refresh failed", e);
+        }
+    }
+
+    // Initialisierung
+    document.addEventListener("DOMContentLoaded", () => {
+        initTheme();
+
+        const themeBtn = document.getElementById("theme-toggle");
+        if (themeBtn) {
+            themeBtn.addEventListener("click", () => {
+                const current = document.documentElement.getAttribute("data-theme") || "dark";
+                const next = current === "dark" ? "light" : "dark";
+                applyTheme(next);
+            });
+        }
+
+        const saveBtn = document.getElementById("save-settings-btn");
+        if (saveBtn) {
+            saveBtn.addEventListener("click", saveSettings);
+        }
+
+        const exportBtn = document.getElementById("export-button");
+        if (exportBtn) {
+            exportBtn.addEventListener("click", (e) => {
+                e.preventDefault();
+                triggerExport();
+            });
+        }
+
+        loadData();
+        setInterval(loadData, 30000);
+
+        refreshBrowserCollector();
+        setInterval(refreshBrowserCollector, 10000);
+    });
+</script>
+</body>
+</html>

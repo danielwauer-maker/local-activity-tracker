@@ -1,7 +1,7 @@
 # backend/schemas.py
 
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Literal, Any
 
 from pydantic import BaseModel
 
@@ -30,4 +30,18 @@ class BrowserEventRead(BrowserEventBase):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True  # falls du SQLAlchemy benutzt (Pydantic v2)
+
+class BrowserCollectorStatus(BaseModel):
+    last_event: Optional[datetime]
+    seconds_since_last_event: Optional[float]
+    status: Literal["ok", "warn", "offline"]
+
+class BrowserEventOut(BaseModel):
+    id: int
+    timestamp: datetime
+    type: str
+    payload: dict[str, Any]
+
+    class Config:
+        from_attributes = True  # falls du SQLAlchemy benutzt (Pydantic v2)

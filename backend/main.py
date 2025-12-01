@@ -12,6 +12,10 @@ from pathlib import Path
 from routes import export as export_routes
 from routes import browser_events
 
+from backend.db import get_db
+from backend import models
+from backend.schemas import BrowserCollectorStatus, BrowserEventOut
+
 app = FastAPI(title="Local Activity Tracker")
 BASE_DIR = Path(__file__).resolve().parent
 INDEX_PATH = BASE_DIR / "templates" / "index.html"
@@ -472,3 +476,81 @@ def analysis_automation_candidates(
     result.sort(key=lambda x: x.potential_savings_per_year, reverse=True)
 
     return result[:limit]
+
+@app.get("/browser")
+def get_browser_timeline(limit: int = 200, db: Session = Depends(get_db)):
+    """
+    Liefert die letzten Browser-Events (source='browser'),
+    neueste zuerst, für die Browser-Timeline im Dashboard.
+    """
+    rows = (
+        db.query(EventModel)
+        .filter(EventModel.source == "browser")
+        .order_by(EventModel.timestamp.desc())
+        .limit(limit)
+        .all()
+    )
+
+    result = []
+    for e in rows:
+        payload = e.payload or {}
+        result.append(
+            {
+                "id": e.id,
+                "timestamp": e.timestamp.isoformat(),
+                "title": payload.get("title"),
+                "url": payload.get("url"),
+                "event_type": e.type,
+            }
+        )
+    return result
+
+@app.get("/collectors/browser/status", response_model=BrowserCollectorStatus)
+def get_browser_status(db: Session = Depends(get_db)):
+    # letztes Event der Quelle "browser" holen
+    last_event = (
+        db.query(models.Event)
+        .filter(models.Event.source == "browser")
+        .order_by(models.Event.timestamp.desc())
+        .first()
+    )
+
+    if not last_event:
+        return BrowserCollectorStatus(
+            last_event=None,
+            seconds_since_last_event=None,
+            status="offline",
+        )
+
+    now = datetime.now(timezone.utc)
+    # sicherstellen, dass last_event.timestamp timezone-aware ist
+    last_ts = (
+        last_event.timestamp
+        if last_event.timestamp.tzinfo
+        else last_event.timestamp.replace(tzinfo=timezone.utc)
+    )
+    diff = (now - last_ts).total_seconds()
+
+    if diff <= 60:
+        status = "ok"
+    elif diff <= 300:
+        status = "warn"
+    else:
+        status = "offline"
+
+    return BrowserCollectorStatus(
+        last_event=last_ts,
+        seconds_since_last_event=diff,
+        status=status,
+    )
+
+@app.get("/events/browser/recent", response_model=list[BrowserEventOut])
+def get_recent_browser_events(limit: int = 100, db: Session = Depends(get_db)):
+    events = (
+        db.query(models.Event)
+        .filter(models.Event.source == "browser")
+        .order_by(models.Event.timestamp.desc())
+        .limit(limit)
+        .all()
+    )
+    return events

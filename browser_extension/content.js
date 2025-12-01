@@ -1,7 +1,7 @@
 // content.js
 
-// Browser-Kompatibilität
-const RT = typeof browser !== "undefined" ? browser : chrome;
+// Browser-Kompatibilität (Manifest V3, Chrome/Edge/Firefox)
+const RT = typeof chrome !== "undefined" ? chrome : browser;
 
 function sanitizeValue(target) {
   try {
@@ -55,7 +55,7 @@ function getLabelFor(target) {
   }
 }
 
-function buildPayload(eventType, target) {
+function buildPayload(eventType, target, extra = {}) {
   return {
     timestamp: new Date().toISOString(),
     url: window.location.href,
@@ -66,23 +66,31 @@ function buildPayload(eventType, target) {
     element_id: target?.id || null,
     element_name: target?.name || null,
     element_label: getLabelFor(target),
-    value_preview: sanitizeValue(target)
+    value_preview: sanitizeValue(target),
+    ...extra
   };
 }
 
-function sendBrowserEvent(eventType, target) {
-  const payload = buildPayload(eventType, target);
+function sendBrowserEvent(eventType, target, extra = {}) {
+  const payload = buildPayload(eventType, target, extra);
 
-  RT.runtime.sendMessage(
-    {
-      type: "browser-event",
-      payload
-    },
-    () => {
-      // Antwort ignorieren – Fehler landen im Background
-    }
-  );
+  try {
+    RT.runtime.sendMessage(
+      {
+        type: "browser-event",
+        payload
+      },
+      () => {
+        // Antwort ignorieren – Fehler landen im Background/Service Worker
+        void 0;
+      }
+    );
+  } catch (e) {
+    console.warn("Local Activity Tracker – sendMessage failed", e);
+  }
 }
+
+/* ---------------- Basis-Events (schon vorhanden) ---------------- */
 
 // Klicks loggen
 document.addEventListener(
@@ -93,7 +101,7 @@ document.addEventListener(
   true
 );
 
-// Eingaben loggen
+// Eingaben loggen (während der Eingabe)
 document.addEventListener(
   "input",
   (e) => {
@@ -110,3 +118,100 @@ document.addEventListener(
   },
   true
 );
+
+/* ---------------- Erweiterungen für Task-Mining ---------------- */
+
+// Änderungen (Select, Checkbox, Radio etc.)
+document.addEventListener(
+  "change",
+  (e) => {
+    const target = e.target;
+    const tag = (target.tagName || "").toLowerCase();
+    const type = (target.type || "").toLowerCase();
+
+    const extra = {
+      change_kind: type || tag || null,
+      checked: typeof target.checked === "boolean" ? target.checked : null
+    };
+
+    sendBrowserEvent("change", target, extra);
+  },
+  true
+);
+
+// Fokus / Blur von Feldern
+document.addEventListener(
+  "focus",
+  (e) => {
+    sendBrowserEvent("focus", e.target);
+  },
+  true
+);
+
+document.addEventListener(
+  "blur",
+  (e) => {
+    sendBrowserEvent("blur", e.target);
+  },
+  true
+);
+
+// Copy / Paste / Cut – ohne Inhalte zu loggen
+document.addEventListener(
+  "copy",
+  (e) => {
+    sendBrowserEvent("copy", e.target, { clipboard_operation: "copy" });
+  },
+  true
+);
+
+document.addEventListener(
+  "paste",
+  (e) => {
+    sendBrowserEvent("paste", e.target, { clipboard_operation: "paste" });
+  },
+  true
+);
+
+document.addEventListener(
+  "cut",
+  (e) => {
+    sendBrowserEvent("cut", e.target, { clipboard_operation: "cut" });
+  },
+  true
+);
+
+// Scroll-Events (gedrosselt, damit nicht tausende Events entstehen)
+let lastScrollSent = 0;
+function handleScroll() {
+  const now = Date.now();
+  if (now - lastScrollSent < 1000) {
+    return; // max. 1 Event / Sekunde
+  }
+  lastScrollSent = now;
+
+  const target = document.scrollingElement || document.documentElement || document.body;
+  const extra = {
+    scroll_x: window.scrollX,
+    scroll_y: window.scrollY,
+    viewport_height: window.innerHeight,
+    viewport_width: window.innerWidth,
+    document_height: document.documentElement?.scrollHeight || null
+  };
+
+  sendBrowserEvent("scroll", target, extra);
+}
+
+window.addEventListener("scroll", handleScroll, { capture: true, passive: true });
+
+// Sichtbarkeitswechsel (Tab aktiv / im Hintergrund)
+document.addEventListener("visibilitychange", () => {
+  sendBrowserEvent("visibilitychange", document, {
+    visibility: document.visibilityState
+  });
+});
+
+// Seite wird verlassen / neu geladen
+window.addEventListener("beforeunload", () => {
+  sendBrowserEvent("before_unload", document);
+});
