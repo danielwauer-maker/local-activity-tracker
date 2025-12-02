@@ -2,7 +2,14 @@ cd C:\dev\localtracker
 .\venv\Scripts\activate
 uvicorn backend.main:app --reload
 
-hier wird etwas aufgezeichnet
+cd C:\Users\Tardis-Admin\Documents\GitHub\local-activity-tracker
+.\venv\Scripts\activate
+uvicorn backend.main:app --reload
+
+
+https://github.com/danielwauer-maker/local-activity-tracker
+
+
 
 
 Projekt: Local Activity Tracker (Python, FastAPI, Windows)
