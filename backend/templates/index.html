@@ -896,34 +896,7 @@
                             </div>
                         </div>
 
-                        <!-- Automatisierung -->
-                        <div class="card-header" style="margin-top: 16px;">
-                            <div>
-                                <h2>Automatisierungskandidaten</h2>
-                                <small>Potenzielle Zeit- & Kostenersparnis</small>
-                            </div>
-                            <div class="card-tag">
-                                Fokus <span>Top-Zeitfresser</span>
-                            </div>
-                        </div>
-                        <div class="table-container">
-                            <div class="table-scroll">
-                                <table id="automation-table">
-                                    <thead>
-                                    <tr>
-                                        <th>App</th>
-                                        <th>Titel</th>
-                                        <th>Ø Min/Tag</th>
-                                        <th>Stunden/Jahr</th>
-                                        <th>Pot. Ersparnis/Jahr</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    <tr><td colspan="5" class="muted">Noch keine Kandidaten gefunden.</td></tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+                        
                     </div>
                 </section>
 
@@ -975,6 +948,35 @@
                                     </thead>
                                     <tbody>
                                     <tr><td colspan="3" class="muted">Noch keine Daten…</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+			<!-- Automatisierung -->
+                        <div class="card-header" style="margin-top: 16px;">
+                            <div>
+                                <h2>Automatisierungskandidaten</h2>
+                                <small>Potenzielle Zeit- & Kostenersparnis</small>
+                            </div>
+                            <div class="card-tag">
+                                Fokus <span>Top-Zeitfresser</span>
+                            </div>
+                        </div>
+                        <div class="table-container">
+                            <div class="table-scroll">
+                                <table id="automation-table">
+                                    <thead>
+                                    <tr>
+                                        <th>App</th>
+                                        <th>Titel</th>
+                                        <th>Ø Min/Tag</th>
+                                        <th>Stunden/Jahr</th>
+                                        <th>Pot. Ersparnis/Jahr</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr><td colspan="5" class="muted">Noch keine Kandidaten gefunden.</td></tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -1913,9 +1915,9 @@
             (data || []).forEach(ev => {
                 const t = ev.type;
                 const p = ev.payload || {};
-                if (t === "mouse_click") clicks++;
+                if (t === "mouse_click_down") clicks++;
                 if (t === "key_down") keys++;
-                if (t === "scroll") scrolls++;
+                if (t === "mouse_scroll") scrolls++;
 
                 const key = [p.app, p.title].filter(Boolean).join(" – ") || "Unbekannt";
                 appCounts[key] = (appCounts[key] || 0) + 1;

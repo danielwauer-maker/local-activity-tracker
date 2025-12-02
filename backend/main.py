@@ -16,6 +16,11 @@ from backend.db import get_db
 from backend import models
 from backend.schemas import BrowserCollectorStatus, BrowserEventOut
 
+from sqlalchemy import func
+from backend.models import Event as EventModel, BrowserEvent
+
+from fastapi import Query
+
 app = FastAPI(title="Local Activity Tracker")
 BASE_DIR = Path(__file__).resolve().parent
 INDEX_PATH = BASE_DIR / "templates" / "index.html"
@@ -554,3 +559,90 @@ def get_recent_browser_events(limit: int = 100, db: Session = Depends(get_db)):
         .all()
     )
     return events
+
+
+@app.get("/analysis/dashboard/summary")
+def analysis_dashboard_summary(
+    from_: str | None = Query(None, alias="from"),
+    to_: str | None = Query(None, alias="to"),
+    db: Session = Depends(get_db)
+):
+    """
+    Liefert die KPI-Summary fürs Dashboard.
+    """
+    # Parse ISO timestamps
+    start = None
+    end = None
+    try:
+        if from_:
+            start = datetime.fromisoformat(from_.replace("Z", "+00:00"))
+        if to:
+            end = datetime.fromisoformat(to.replace("Z", "+00:00"))
+    except:
+        pass
+
+    # Prepare base query
+    q = db.query(EventModel)
+    if start:
+        q = q.filter(EventModel.timestamp >= start)
+    if end:
+        q = q.filter(EventModel.timestamp <= end)
+
+    # --- Fensteraktivität ---
+    total_active_hours = 0.0
+    window_rows = q.filter(EventModel.source == "window").all()
+
+    for ev in window_rows:
+        payload = ev.payload or {}
+        dur = (
+            payload.get("duration_seconds")
+            or payload.get("duration")
+            or 0
+        )
+        total_active_hours += dur / 3600.0
+
+    # --- Input ---
+    total_keystrokes = (
+        db.query(EventModel)
+        .filter(EventModel.source == "input")
+        .filter(EventModel.type == "key_down")
+        .count()
+    )
+    total_clicks = (
+        db.query(EventModel)
+        .filter(EventModel.source == "input")
+        .filter(EventModel.type == "mouse_click_down")
+        .count()
+    )
+
+    # --- Dokumente ---
+    document_events = q.filter(EventModel.source == "document").count()
+
+    # --- BrowserEvents (separate Tabelle) ---
+    bq = db.query(BrowserEvent)
+    if start:
+        bq = bq.filter(BrowserEvent.timestamp >= start)
+    if end:
+        bq = bq.filter(BrowserEvent.timestamp <= end)
+    browser_events = bq.count()
+
+    # --- Screenshots (über Event-Tabelle) ---
+    screenshot_count = q.filter(EventModel.source == "screenshot").count()
+
+    # Coverage (grobe Schätzung)
+    coverage_percent = None
+    if start and end:
+        total_seconds = (end - start).total_seconds()
+        if total_seconds > 0 and screenshot_count > 0:
+            shots_per_min = screenshot_count / (total_seconds / 60)
+            coverage_percent = min(100, shots_per_min * 100)
+
+    return {
+        "total_active_hours": round(total_active_hours, 2),
+        "total_keystrokes": total_keystrokes,
+        "total_clicks": total_clicks,
+        "document_events": document_events,
+        "browser_events": browser_events,
+        "screenshot_count": screenshot_count,
+        "coverage_percent": coverage_percent
+    }
